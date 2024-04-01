@@ -6,7 +6,7 @@ require.config({
         main: 'moment'
     }],
     //在打包压缩时将会把include中的模块合并到主文件中
-    include: ['css', 'layer', 'toastr', 'fast', 'backend', 'backend-init', 'table', 'form', 'dragsort', 'drag', 'drop', 'addtabs', 'selectpage', 'bootstrap-daterangepicker'],
+    include: ['css', 'layer', 'toastr', 'fast', 'backend', 'backend-init', 'table', 'form', 'dragsort', 'addtabs', 'selectpage', 'bootstrap-daterangepicker'],
     paths: {
         'lang': "empty:",
         'form': 'require-form',
@@ -25,12 +25,12 @@ require.config({
         'bootstrap-daterangepicker': '../libs/bootstrap-daterangepicker/daterangepicker',
         'bootstrap-select': '../libs/bootstrap-select/dist/js/bootstrap-select.min',
         'bootstrap-select-lang': '../libs/bootstrap-select/dist/js/i18n/defaults-zh_CN',
-        'bootstrap-table': '../libs/fastadmin-bootstraptable/dist/bootstrap-table.min',
-        'bootstrap-table-export': '../libs/fastadmin-bootstraptable/dist/extensions/export/bootstrap-table-export',
-        'bootstrap-table-fixed-columns': '../libs/fastadmin-bootstraptable/dist/extensions/fixed-columns/bootstrap-table-fixed-columns',
-        'bootstrap-table-mobile': '../libs/fastadmin-bootstraptable/dist/extensions/mobile/bootstrap-table-mobile.min',
-        'bootstrap-table-lang': '../libs/fastadmin-bootstraptable/dist/locale/bootstrap-table-zh-CN',
-        'bootstrap-table-jumpto': '../libs/fastadmin-bootstraptable/dist/extensions/page-jumpto/bootstrap-table-jumpto',
+        'bootstrap-table': '../libs/bootstrap-table/dist/bootstrap-table.min',
+        'bootstrap-table-export': '../libs/bootstrap-table/dist/extensions/export/bootstrap-table-export',
+        'bootstrap-table-fixed-columns': '../libs/bootstrap-table/dist/extensions/fixed-columns/bootstrap-table-fixed-columns',
+        'bootstrap-table-mobile': '../libs/bootstrap-table/dist/extensions/mobile/bootstrap-table-mobile.min',
+        'bootstrap-table-lang': '../libs/bootstrap-table/dist/locale/bootstrap-table-zh-CN',
+        'bootstrap-table-jumpto': '../libs/bootstrap-table/dist/extensions/page-jumpto/bootstrap-table-jumpto',
         'bootstrap-slider': '../libs/bootstrap-slider/dist/bootstrap-slider.min',
         'tableexport': '../libs/tableexport.jquery.plugin/tableExport.min',
         'dragsort': '../libs/fastadmin-dragsort/jquery.dragsort',
@@ -46,7 +46,6 @@ require.config({
         'cxselect': '../libs/fastadmin-cxselect/js/jquery.cxselect',
         'template': '../libs/art-template/dist/template-native',
         'selectpage': '../libs/fastadmin-selectpage/selectpage',
-        'coloris': '../libs/coloris/dist/umd/coloris.min',
         'citypicker': '../libs/fastadmin-citypicker/dist/js/city-picker.min',
         'citypicker-data': '../libs/fastadmin-citypicker/dist/js/city-picker.data',
     },
@@ -120,7 +119,6 @@ require.config({
         },
         'jstree': ['css!../libs/jstree/dist/themes/default/style.css'],
         'validator-lang': ['validator'],
-        'coloris': ['css!../libs/coloris/dist/coloris.min.css'],
         'citypicker': ['citypicker-data', 'css!../libs/fastadmin-citypicker/dist/css/city-picker.css']
     },
     baseUrl: requirejs.s.contexts._.config.config.site.cdnurl + '/assets/js/', //资源基础路径

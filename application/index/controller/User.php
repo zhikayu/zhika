@@ -196,7 +196,7 @@ class User extends Frontend
      */
     public function mobilelogin()
     {
-        $url = $this->request->request('url', '', 'trim,xss_clean');
+        $url = $this->request->request('url', '', 'url_clean');
         if ($this->request->isPost()) {
             $mobile = $this->request->post('mobile');
             $captcha = $this->request->post('captcha');

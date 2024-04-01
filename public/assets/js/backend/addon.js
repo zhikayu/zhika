@@ -380,12 +380,10 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                         Layer.open({
                             content: Template.render(tpldata, userinfo),
                             area: area,
-                            title: __('Login FastAdmin'),
+                            title: __('Userinfo'),
                             resize: false,
-                            btn: [__('Login')],
-                            yes: function (index, layero) {
-                                var data = $("form", layero).serializeArray();
-                                data.push({name: "faversion", value: Config.faversion});
+                            btn: [__('Logout'), __('Close')],
+                            yes: function () {
                                 Fast.api.ajax({
                                     url: Config.api_url + '/user/logout',
                                     data: {
@@ -395,71 +393,20 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                                         sid: Controller.api.sid()
                                     }
                                 }, function (data, ret) {
-                                    Controller.api.userinfo.set(data);
+                                    Controller.api.userinfo.set(null);
                                     Layer.closeAll();
-                                    Layer.alert(ret.msg, {title: __('Warning'), icon: 1});
-                                    return false;
+                                    Layer.alert(ret.msg, {title: __('Warning'), icon: 0});
                                 }, function (data, ret) {
+                                    Controller.api.userinfo.set(null);
+                                    Layer.closeAll();
+                                    Layer.alert(ret.msg, {title: __('Warning'), icon: 0});
                                 });
-                            },
-                            success: function (layero, index) {
-                                this.checkEnterKey = function (event) {
-                                    if (event.keyCode === 13) {
-                                        $(".layui-layer-btn0").trigger("click");
-                                        return false;
-                                    }
-                                };
-                                $(document).on('keydown', this.checkEnterKey);
-                            },
-                            end: function () {
-                                $(document).off('keydown', this.checkEnterKey);
                             }
                         });
                         return false;
-                    });
-                } else {
-                    Fast.api.ajax({
-                        url: Config.api_url + '/user/userinfotpl',
-                        type: 'post',
-                        data: {
-                            version: Config.faversion
-                        }
-                    }, function (tpldata, ret) {
-                        Fast.api.ajax({
-                            url: Config.api_url + '/user/index',
-                            data: {
-                                uid: userinfo.id,
-                                token: userinfo.token,
-                                version: Config.faversion,
-                            }
-                        }, function (data) {
-                            Layer.open({
-                                content: Template.render(tpldata, userinfo),
-                                area: area,
-                                title: __('Userinfo'),
-                                resize: false,
-                                btn: [__('Logout'), __('Close')],
-                                yes: function () {
-                                    Fast.api.ajax({
-                                        url: Config.api_url + '/user/logout',
-                                        data: {uid: userinfo.id, token: userinfo.token, version: Config.faversion}
-                                    }, function (data, ret) {
-                                        Controller.api.userinfo.set(null);
-                                        Layer.closeAll();
-                                        Layer.alert(ret.msg, {title: __('Warning'), icon: 0});
-                                    }, function (data, ret) {
-                                        Controller.api.userinfo.set(null);
-                                        Layer.closeAll();
-                                        Layer.alert(ret.msg, {title: __('Warning'), icon: 0});
-                                    });
-                                }
-                            });
-                            return false;
-                        }, function (data) {
-                            Controller.api.userinfo.set(null);
-                            $(that).trigger('click');
-                            return false;
-                        });
+                    }, function (data) {
+                        Controller.api.userinfo.set(null);
+                        $(that).trigger('click');
                         return false;
                     });
                 }
