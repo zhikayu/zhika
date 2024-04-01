@@ -160,11 +160,16 @@
     <div class="">
         <div class=""><%=#__("Are you sure you want to unstall %s?", addon['title'])%>
             <p class="text-danger">{:__('Delete all the addon file and cannot be recovered!')} </p>
-                      {if config('app_debug')}
+            {if config('app_debug')}
             <p class="text-danger"><input type="checkbox" name="droptables" id="droptables" data-name="<%=addon['name']%>"/> {:__('Delete all the addon database and cannot be recovered!')} </p>
-                      {/if}
+            {/if}
             <p class="text-danger">{:__('Please backup important data manually before uninstall!')}</p>
         </div>
+    </div>
+</script>
+<script id="upgradetpl" type="text/html">
+    <div class="">
+        <div class=""><%=#__("Upgrade tips", addon['title'])%></div>
     </div>
 </script>
 <script id="conflicttpl" type="text/html">

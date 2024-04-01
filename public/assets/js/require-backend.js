@@ -12,8 +12,6 @@ require.config({
         'form': 'require-form',
         'table': 'require-table',
         'upload': 'require-upload',
-        'drag': 'jquery.drag.min',
-        'drop': 'jquery.drop.min',
         'dropzone': 'dropzone.min',
         'echarts': 'echarts.min',
         'echarts-theme': 'echarts-theme',

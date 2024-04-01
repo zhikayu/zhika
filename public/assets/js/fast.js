@@ -103,8 +103,8 @@ define(['jquery', 'bootstrap', 'toastr', 'layer', 'lang'], function ($, undefine
             //获取修复后可访问的cdn链接
             cdnurl: function (url, domain) {
                 var rule = new RegExp("^((?:[a-z]+:)?\\/\\/|data:image\\/)", "i");
-                if(typeof domain === 'undefined'){
-                    var cdnurl = Config.upload.cdnurl;
+                var cdnurl = Config.upload.cdnurl;
+                if (typeof domain === 'undefined' || domain === true || cdnurl.indexOf("/") === 0) {
                     url = rule.test(url) || (cdnurl && url.indexOf(cdnurl) === 0) ? url : cdnurl + url;
                 }
                 if (domain && !rule.test(url)) {
@@ -118,6 +118,8 @@ define(['jquery', 'bootstrap', 'toastr', 'layer', 'lang'], function ($, undefine
                 if (!url) {
                     url = window.location.href;
                 }
+                if (!name)
+                    return '';
                 name = name.replace(/[\[\]]/g, "\\$&");
                 var regex = new RegExp("[?&/]" + name + "([=/]([^&#/?]*)|&|#|$)"),
                     results = regex.exec(url);
@@ -275,6 +277,18 @@ define(['jquery', 'bootstrap', 'toastr', 'layer', 'lang'], function ($, undefine
                 Layer.msg(message, {
                     time: 2000
                 }, callback);
+            },
+            escape: function (text) {
+                if (typeof text === 'string') {
+                    return text
+                        .replace(/&/g, '&amp;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#039;')
+                        .replace(/`/g, '&#x60;');
+                }
+                return text;
             },
             toastr: Toastr,
             layer: Layer

@@ -2,7 +2,6 @@
 
 // 公共助手函数
 
-use Symfony\Component\VarExporter\VarExporter;
 use think\exception\HttpResponseException;
 use think\Response;
 
@@ -88,8 +87,8 @@ if (!function_exists('cdnurl')) {
     function cdnurl($url, $domain = false)
     {
         $regex = "/^((?:[a-z]+:)?\/\/|data:image\/)(.*)/i";
-        if (is_bool($domain)) {
-            $cdnurl = \think\Config::get('upload.cdnurl');
+        $cdnurl = \think\Config::get('upload.cdnurl');
+        if (is_bool($domain) || stripos($cdnurl, '/') === 0) {
             $url = preg_match($regex, $url) || ($cdnurl && stripos($url, $cdnurl) === 0) ? $url : $cdnurl . $url;
         }
         if ($domain && !preg_match($regex, $url)) {
@@ -249,9 +248,10 @@ if (!function_exists('addtion')) {
             if ($v['model']) {
                 $model = new $v['model'];
             } else {
-                $model = $v['name'] ? \think\Db::name($v['name']) : \think\Db::table($v['table']);
+                // 优先判断使用table的配置
+                $model = $v['table'] ? \think\Db::table($v['table']) : \think\Db::name($v['name']);
             }
-            $primary = $v['primary'] ? $v['primary'] : $model->getPk();
+            $primary = $v['primary'] ?: $model->getPk();
             $result[$v['field']] = isset($ids[$v['field']]) ? $model->where($primary, 'in', $ids[$v['field']])->column($v['column'], $primary) : [];
         }
 
@@ -280,60 +280,6 @@ if (!function_exists('var_export_short')) {
     function var_export_short($data, $return = true)
     {
         return var_export($data, $return);
-        $replaced = [];
-        $count = 0;
-
-        //判断是否是对象
-        if (is_resource($data) || is_object($data)) {
-            return var_export($data, $return);
-        }
-
-        //判断是否有特殊的键名
-        $specialKey = false;
-        array_walk_recursive($data, function (&$value, &$key) use (&$specialKey) {
-            if (is_string($key) && (stripos($key, "\n") !== false || stripos($key, "array (") !== false)) {
-                $specialKey = true;
-            }
-        });
-        if ($specialKey) {
-            return var_export($data, $return);
-        }
-        array_walk_recursive($data, function (&$value, &$key) use (&$replaced, &$count, &$stringcheck) {
-            if (is_object($value) || is_resource($value)) {
-                $replaced[$count] = var_export($value, true);
-                $value = "##<{$count}>##";
-            } else {
-                if (is_string($value) && (stripos($value, "\n") !== false || stripos($value, "array (") !== false)) {
-                    $index = array_search($value, $replaced);
-                    if ($index === false) {
-                        $replaced[$count] = var_export($value, true);
-                        $value = "##<{$count}>##";
-                    } else {
-                        $value = "##<{$index}>##";
-                    }
-                }
-            }
-            $count++;
-        });
-
-        $dump = var_export($data, true);
-
-        $dump = preg_replace('#(?:\A|\n)([ ]*)array \(#i', '[', $dump); // Starts
-        $dump = preg_replace('#\n([ ]*)\),#', "\n$1],", $dump); // Ends
-        $dump = preg_replace('#=> \[\n\s+\],\n#', "=> [],\n", $dump); // Empties
-        $dump = preg_replace('#\)$#', "]", $dump); //End
-
-        if ($replaced) {
-            $dump = preg_replace_callback("/'##<(\d+)>##'/", function ($matches) use ($replaced) {
-                return $replaced[$matches[1]] ?? "''";
-            }, $dump);
-        }
-
-        if ($return === true) {
-            return $dump;
-        } else {
-            echo $dump;
-        }
     }
 }
 
@@ -429,7 +375,7 @@ if (!function_exists('check_cors_request')) {
      */
     function check_cors_request()
     {
-        if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN']) {
+        if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN'] && config('fastadmin.cors_request_domain')) {
             $info = parse_url($_SERVER['HTTP_ORIGIN']);
             $domainArr = explode(',', config('fastadmin.cors_request_domain'));
             $domainArr[] = request()->host(true);
@@ -504,20 +450,24 @@ if (!function_exists('check_url_allowed')) {
      * @param string $url URL
      * @return bool
      */
-    function check_url_allowed($url = null)
+    function check_url_allowed($url = '')
     {
         //允许的主机列表
         $allowedHostArr = [
             strtolower(request()->host())
         ];
 
+        if (empty($url)) {
+            return true;
+        }
+
         //如果是站内相对链接则允许
-        if (preg_match("/^[\/a-z][a-z0-9][a-z0-9\.\/]+\$/i", $url) && substr($url, 0, 2) !== '//') {
+        if (preg_match("/^[\/a-z][a-z0-9][a-z0-9\.\/]+((\?|#).*)?\$/i", $url) && substr($url, 0, 2) !== '//') {
             return true;
         }
 
         //如果是站外链接则需要判断HOST是否允许
-        if (preg_match("/((http[s]?:\/\/)+(?>[a-z\-0-9]{2,}\.){1,}[a-z]{2,8})(?:\s|\/)/i", $url)) {
+        if (preg_match("/((http[s]?:\/\/)+((?>[a-z\-0-9]{2,}\.)+[a-z]{2,8}|((?>([0-9]{1,3}\.)){3}[0-9]{1,3}))(:[0-9]{1,5})?)(?:\s|\/)/i", $url)) {
             $chkHost = parse_url(strtolower($url), PHP_URL_HOST);
             if ($chkHost && in_array($chkHost, $allowedHostArr)) {
                 return true;

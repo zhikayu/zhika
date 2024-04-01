@@ -123,10 +123,10 @@ class Backend extends Controller
         $path = str_replace('.', '/', $controllername) . '/' . $actionname;
 
         // 定义是否Addtabs请求
-        !defined('IS_ADDTABS') && define('IS_ADDTABS', input("addtabs") ? true : false);
+        !defined('IS_ADDTABS') && define('IS_ADDTABS', (bool)input("addtabs"));
 
         // 定义是否Dialog请求
-        !defined('IS_DIALOG') && define('IS_DIALOG', input("dialog") ? true : false);
+        !defined('IS_DIALOG') && define('IS_DIALOG', (bool)input("dialog"));
 
         // 定义是否AJAX请求
         !defined('IS_AJAX') && define('IS_AJAX', $this->request->isAjax());
@@ -269,7 +269,8 @@ class Backend extends Controller
         $sort = $this->request->get("sort", !empty($this->model) && $this->model->getPk() ? $this->model->getPk() : 'id');
         $order = $this->request->get("order", "DESC");
         $offset = $this->request->get("offset/d", 0);
-        $limit = $this->request->get("limit/d", 999999);
+        $limit = $this->request->get("limit/d", 0);
+        $limit = $limit ?: 999999;
         //新增自动计算页码
         $page = $limit ? intval($offset / $limit) + 1 : 1;
         if ($this->request->has("page")) {
@@ -397,7 +398,7 @@ class Backend extends Controller
                         $arr = $arr[0];
                     }
                     $tableArr = explode('.', $k);
-                    if (count($tableArr) > 1 && $tableArr[0] != $name && !in_array($tableArr[0], $alias) 
+                    if (count($tableArr) > 1 && $tableArr[0] != $name && !in_array($tableArr[0], $alias)
                         && !empty($this->model) && $this->relationSearch) {
                         //修复关联模型下时间无法搜索的BUG
                         $relation = Loader::parseName($tableArr[0], 1, false);

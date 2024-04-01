@@ -73,12 +73,13 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
             Template.helper("Moment", Moment);
             Template.helper("addons", Config['addons']);
 
-            $("#faupload-addon").data("params", function () {
+            $("#faupload-addon").data("params", function (files, xhr) {
                 var userinfo = Controller.api.userinfo.get();
                 return {
                     uid: userinfo ? userinfo.id : '',
                     token: userinfo ? userinfo.token : '',
-                    version: Config.faversion
+                    version: Config.faversion,
+                    force: (files[0].force || false) ? 1 : 0
                 };
             });
 
@@ -92,7 +93,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                         uid: userinfo ? userinfo.id : '',
                         token: userinfo ? userinfo.token : '',
                         domain: Config.domain,
-                        version: Config.faversion
+                        version: Config.faversion,
+                        sid: Controller.api.sid()
                     });
                     return params;
                 },
@@ -113,7 +115,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                             align: 'left',
                             formatter: Controller.api.formatter.title
                         },
-                        {field: 'intro', title: __('Intro'), operate: 'LIKE', align: 'left', class: 'visible-lg'},
+                        {
+                            field: 'intro',
+                            title: __('Intro'),
+                            operate: 'LIKE',
+                            align: 'left',
+                            class: 'visible-lg',
+                            formatter: Controller.api.formatter.intro
+                        },
                         {
                             field: 'author',
                             title: __('Author'),
@@ -187,7 +196,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
 
             // 离线安装
             require(['upload'], function (Upload) {
-                Upload.api.upload("#faupload-addon", function (data, ret) {
+                Upload.api.upload("#faupload-addon", function (data, ret, up, file) {
                     Config['addons'][data.addon.name] = data.addon;
                     var addon = data.addon;
                     var testdata = data.addon.testdata;
@@ -215,7 +224,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                         });
                     });
                     return false;
-                }, function (data, ret) {
+                }, function (data, ret, up, file) {
                     if (ret.msg && ret.msg.match(/(login|登录)/g)) {
                         return Layer.alert(ret.msg, {
                             title: __('Warning'),
@@ -224,6 +233,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                                 $(".btn-userinfo").trigger("click");
                             }
                         });
+                    } else if (ret.code === -1) {
+                        Layer.confirm(__('Upgrade tips', data.title), {title: __('Warmtips')}, function (index, layero) {
+                            up.removeFile(file);
+                            file.force = true;
+                            up.uploadFile(file);
+                            Layer.close(index);
+                        });
+                        return false;
                     }
                 });
 
@@ -231,10 +248,16 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                 $(document).on("mousedown", "#faupload-addon", function (e) {
                     var userinfo = Controller.api.userinfo.get();
                     var uid = userinfo ? userinfo.id : 0;
+                    var uploadBtn = Upload.list['faupload-addon'];
 
                     if (parseInt(uid) === 0) {
+                        uploadBtn.disable();
                         $(".btn-userinfo").trigger("click");
                         return false;
+                    } else {
+                        if (uploadBtn.disabled) {
+                            uploadBtn.enable();
+                        }
                     }
                 });
             });
@@ -299,13 +322,63 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                     Fast.api.ajax({
                         url: Config.api_url + '/user/logintpl',
                         type: 'post',
+                        loading: false,
                         data: {
-                            version: Config.faversion
+                            version: Config.faversion,
+                            sid: Controller.api.sid()
                         }
                     }, function (tpldata, ret) {
                         Layer.open({
                             content: Template.render(tpldata, {}),
                             zIndex: 99,
+                            area: area,
+                            title: __('Login'),
+                            resize: false,
+                            btn: [__('Login')],
+                            yes: function (index, layero) {
+                                var data = $("form", layero).serializeArray();
+                                data.push({name: "faversion", value: Config.faversion});
+                                data.push({name: "sid", value: Controller.api.sid()});
+                                Fast.api.ajax({
+                                    url: Config.api_url + '/user/login',
+                                    type: 'post',
+                                    data: data
+                                }, function (data, ret) {
+                                    Controller.api.userinfo.set(data);
+                                    Layer.closeAll();
+                                    Layer.alert(ret.msg, {title: __('Warning'), icon: 1});
+                                    return false;
+                                }, function (data, ret) {
+                                });
+                            },
+                            success: function (layero, index) {
+                                this.checkEnterKey = function (event) {
+                                    if (event.keyCode === 13) {
+                                        $(".layui-layer-btn0").trigger("click");
+                                        return false;
+                                    }
+                                };
+                                $(document).on('keydown', this.checkEnterKey);
+                            },
+                            end: function () {
+                                $(document).off('keydown', this.checkEnterKey);
+                            }
+                        });
+                        return false;
+                    });
+                } else {
+                    Fast.api.ajax({
+                        url: Config.api_url + '/user/userinfotpl',
+                        type: 'post',
+                        data: {
+                            uid: userinfo.id,
+                            token: userinfo.token,
+                            version: Config.faversion,
+                            sid: Controller.api.sid()
+                        }
+                    }, function (tpldata, ret) {
+                        Layer.open({
+                            content: Template.render(tpldata, userinfo),
                             area: area,
                             title: __('Login FastAdmin'),
                             resize: false,
@@ -314,9 +387,13 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                                 var data = $("form", layero).serializeArray();
                                 data.push({name: "faversion", value: Config.faversion});
                                 Fast.api.ajax({
-                                    url: Config.api_url + '/user/login',
-                                    type: 'post',
-                                    data: data
+                                    url: Config.api_url + '/user/logout',
+                                    data: {
+                                        uid: userinfo.id,
+                                        token: userinfo.token,
+                                        version: Config.faversion,
+                                        sid: Controller.api.sid()
+                                    }
                                 }, function (data, ret) {
                                     Controller.api.userinfo.set(data);
                                     Layer.closeAll();
@@ -610,16 +687,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                 var uid = userinfo ? userinfo.id : 0;
 
                 if (parseInt(uid) === 0) {
-                    return Layer.alert(__('Not login tips'), {
-                        title: __('Warning'),
-                        btn: [__('Login now')],
-                        yes: function (index, layero) {
-                            $(".btn-userinfo").trigger("click", name, version);
-                        },
-                        btn2: function () {
-                            install(name, version, false);
-                        }
-                    });
+                    $(".btn-userinfo").trigger("click", name, version);
+                    return false;
                 }
                 install(name, version, false);
             });
@@ -632,6 +701,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                     return false;
                 }
                 Template.helper("__", __);
+                tables = [];
                 Layer.confirm(Template("uninstalltpl", {addon: Config['addons'][name]}), {focusBtn: false, title: __("Warning")}, function (index, layero) {
                     uninstall(name, false, $("input[name='droptables']", layero).prop("checked"));
                 });
@@ -659,7 +729,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                 }
                 var version = $(this).data("version");
 
-                Layer.confirm(__('Upgrade tips', Config['addons'][name].title), function (index, layero) {
+                Layer.confirm(__('Upgrade tips', Config['addons'][name].title), {title: __('Warmtips')}, function (index, layero) {
                     upgrade(name, version);
                 });
             });
@@ -709,11 +779,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                     if ($(".btn-switch.active").data("type") == "local") {
                         // return value;
                     }
-                    var title = '<a class="title" href="' + row.url + '" data-toggle="tooltip" title="' + __('View addon home page') + '" target="_blank">' + value + '</a>';
+                    var title = '<a class="title" href="' + row.url + '" data-toggle="tooltip" title="' + __('View addon home page') + '" target="_blank"><span class="' + Fast.api.escape(row.color) + '">' + value + '</span></a>';
                     if (row.screenshots && row.screenshots.length > 0) {
                         title += ' <a href="javascript:;" data-index="' + index + '" class="view-screenshots text-success" title="' + __('View addon screenshots') + '" data-toggle="tooltip"><i class="fa fa-image"></i></a>';
                     }
                     return title;
+                },
+                intro: function (value, row, index) {
+                    return row.intro + (row.extend ? "<a href='" + Fast.api.escape(row.extend[1]) + "' class='" + Fast.api.escape(row.extend[2]) + "'>" + Fast.api.escape(row.extend[0]) + "</a>" : "");
                 },
                 operate: function (value, row, index) {
                     return Template("operatetpl", {item: row, index: index});
@@ -776,6 +849,14 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie']
                         }
                     }
                 }
+            },
+            sid: function () {
+                var sid = $.cookie('fastadmin_sid');
+                if (!sid) {
+                    sid = Math.random().toString(20).substr(2, 12);
+                    $.cookie('fastadmin_sid', sid);
+                }
+                return sid;
             },
             refresh: function (table, name) {
                 //刷新左侧边栏

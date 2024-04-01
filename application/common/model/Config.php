@@ -175,7 +175,7 @@ class Config extends Model
         if (!preg_match("/^((?:[a-z]+:)?\/\/)(.*)/i", $uploadurl) && substr($uploadurl, 0, 1) !== '/') {
             $uploadurl = url($uploadurl, '', false);
         }
-        $uploadcfg['fullmode'] = isset($uploadcfg['fullmode']) && $uploadcfg['fullmode'] ? true : false;
+        $uploadcfg['fullmode'] = isset($uploadcfg['fullmode']) && $uploadcfg['fullmode'];
         $uploadcfg['thumbstyle'] = $uploadcfg['thumbstyle'] ?? '';
 
         $upload = [

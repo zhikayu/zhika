@@ -27,7 +27,7 @@ define(['jquery', 'bootstrap', 'frontend', 'form', 'template'], function ($, und
                 Layer.open({
                     type: 1,
                     title: __('Reset password'),
-                    area: [Math.min($(window).width(), 450) + "px", "355px"],
+                    area: [$(window).width() < 450 ? ($(window).width() - 10) + "px" : "450px", "355px"],
                     content: content,
                     success: function (layero) {
                         var rule = $("#resetpwd-form input[name='captcha']").data("rule");
@@ -98,7 +98,7 @@ define(['jquery', 'bootstrap', 'frontend', 'form', 'template'], function ($, und
                 Layer.open({
                     type: 1,
                     title: "修改",
-                    area: [Math.min($(window).width(), 400) + "px", "250px"],
+                    area: [$(window).width() < 450 ? ($(window).width() - 10) + "px" : "450px", "355px"],
                     content: content,
                     success: function (layero) {
                         var form = $("form", layero);

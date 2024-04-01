@@ -44,7 +44,6 @@ class Index extends Backend
             'dashboard' => 'hot',
             'addon'     => ['new', 'red', 'badge'],
             'auth/rule' => __('Menu'),
-            'general'   => ['new', 'purple'],
         ], $this->view->site['fixedpage']);
         $action = $this->request->request('action');
         if ($this->request->isPost()) {
@@ -66,7 +65,8 @@ class Index extends Backend
      */
     public function login()
     {
-        $url = $this->request->get('url', 'index/index', 'url_clean');
+        $url = $this->request->get('url', '', 'url_clean');
+        $url = $url ?: 'index/index';
         if ($this->auth->isLogin()) {
             $this->success(__("You've logged in, do not login again"), $url);
         }
@@ -74,7 +74,7 @@ class Index extends Backend
         $keeyloginhours = 24;
         if ($this->request->isPost()) {
             $username = $this->request->post('username');
-            $password = $this->request->post('password');
+            $password = $this->request->post('password', '', null);
             $keeplogin = $this->request->post('keeplogin');
             $token = $this->request->post('__token__');
             $rule = [

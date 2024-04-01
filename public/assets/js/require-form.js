@@ -133,7 +133,11 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                     });
                     $(form).on("reset", function () {
                         setTimeout(function () {
-                            $('.selectpage', form).selectPageClear();
+                            $(".selectpage", form).each(function () {
+                                var selectpage = $(this).data("selectPageObject");
+                                selectpage.elem.hidden.val($(this).val());
+                                $(this).selectPageRefresh();
+                            });
                         }, 1);
                     });
                 }
@@ -321,9 +325,14 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                             var result = template ? [] : {};
                             $.each(data, function (i, j) {
                                 if (j) {
-                                    if (!template) {
-                                        if (j.key !== '') {
-                                            result['__PLACEHOLDKEY__' + j.key] = j.value;
+                                    var keys = Object.keys(j);
+                                    if (keys.indexOf("value") > -1 && (keys.length === 1 || (keys.length === 2 && keys.indexOf("key") > -1))) {
+                                        if (keys.length === 2) {
+                                            if (j.key != '') {
+                                                result['__PLACEHOLDKEY__' + j.key] = j.value;
+                                            }
+                                        } else {
+                                            result.push(j.value);
                                         }
                                     } else {
                                         result.push(j);
@@ -366,6 +375,12 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                             return obj;
                         };
                         var fieldlist = $(".fieldlist", form);
+                        //表单重置
+                        form.on("reset", function () {
+                            setTimeout(function () {
+                                fieldlist.trigger("fa.event.refreshfieldlist");
+                            });
+                        });
                         //监听文本框改变事件
                         $(document).on('change keyup changed', ".fieldlist input,.fieldlist textarea,.fieldlist select", function () {
                             var container = $(this).closest(".fieldlist");
@@ -375,7 +390,7 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                         fieldlist.on("click", ".btn-append,.append", function (e, row) {
                             var container = $(this).closest(".fieldlist");
                             append(container, row);
-                            // refresh(container);
+                            refresh(container);
                         });
                         //移除控制(点击按钮)
                         fieldlist.on("click", ".btn-remove", function () {
@@ -467,9 +482,9 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
 
             },
             slider: function (form) {
-                if ($(".slider", form).length > 0) {
+                if ($("[data-role='slider'],input.slider", form).length > 0) {
                     require(['bootstrap-slider'], function () {
-                        $('.slider').removeClass('hidden').css('width', function (index, value) {
+                        $("[data-role='slider'],input.slider").removeClass('hidden').css('width', function (index, value) {
                             return $(this).parents('.form-control').width();
                         }).slider().on('slide', function (ev) {
                             var data = $(this).data();
@@ -484,6 +499,11 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                 if ($("[data-role='tagsinput']", form).length > 0) {
                     require(['tagsinput', 'autocomplete'], function () {
                         $("[data-role='tagsinput']").tagsinput();
+                        form.on("reset", function () {
+                            setTimeout(function () {
+                                $("[data-role='tagsinput']").tagsinput('reset');
+                            }, 0);
+                        });
                     });
                 }
             },
@@ -504,13 +524,27 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                     var baseregex = /^([a-z0-9\_]+)([>|<|=|\!]=?)(.*)$/i, strregex = /^('|")(.*)('|")$/, regregex = /^regex:(.*)$/;
                     // @formatter:off
                     var operator_result = {
-                        '>': function(a, b) { return a > b; },
-                        '>=': function(a, b) { return a >= b; },
-                        '<': function(a, b) { return a < b; },
-                        '<=': function(a, b) { return a <= b; },
-                        '==': function(a, b) { return a == b; },
-                        '!=': function(a, b) { return a != b; },
-                        'in': function(a, b) { return b.split(/\,/).indexOf(a) > -1; },
+                        '>': function (a, b) {
+                            return a > b;
+                        },
+                        '>=': function (a, b) {
+                            return a >= b;
+                        },
+                        '<': function (a, b) {
+                            return a < b;
+                        },
+                        '<=': function (a, b) {
+                            return a <= b;
+                        },
+                        '==': function (a, b) {
+                            return a == b;
+                        },
+                        '!=': function (a, b) {
+                            return a != b;
+                        },
+                        'in': function (a, b) {
+                            return b.split(/\,/).indexOf(a) > -1;
+                        },
                         'regex': function (a, b) {
                             var regParts = b.match(/^\/(.*?)\/([gim]*)$/);
                             var regexp = regParts ? new RegExp(regParts[1], regParts[2]) : new RegExp(b);
@@ -558,10 +592,10 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                     });
                     return success === conditionArr.length;
                 };
-                form.on("keyup change click configchange", "input,select", function () {
+                form.on("keyup change click configchange", "input,textarea,select", function () {
                     $("[data-favisible][data-favisible!='']", form).each(function () {
                         var visible = $(this).data("favisible");
-                        var groupArr = visible.split(/\|\|/);
+                        var groupArr = visible ? visible.toString().split(/\|\|/) : [];
                         var success = 0;
                         $.each(groupArr, function (i, j) {
                             if (checkCondition(j)) {
@@ -578,10 +612,13 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
 
                 //追加上忽略元素
                 setTimeout(function () {
-                    form.data('validator').options.ignore += ((form.data('validator').options.ignore ? ',' : '') + '[data-favisible] :hidden,[data-favisible]:hidden');
+                    var validator = form.data('validator');
+                    if (validator) {
+                        validator.options.ignore += ((validator.options.ignore ? ',' : '') + '.hidden[data-favisible] :hidden,.hidden[data-favisible]:hidden');
+                    }
                 }, 0);
 
-                $("input,select", form).trigger("configchange");
+                $("input,textarea,select", form).trigger("configchange");
             }
         },
         api: {
