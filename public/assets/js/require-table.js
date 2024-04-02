@@ -837,7 +837,7 @@ define(['jquery', 'bootstrap'], function ($, undefined) {
                         var customValue = this.customField.split('.').reduce(function (obj, key) {
                             return obj === null || obj === undefined ? '' : obj[key];
                         }, row);
-                        value = customValue;
+                        value = Fast.api.escape(customValue);
                         field = this.customField;
                     }
                     return '<a href="javascript:;" class="searchit" data-toggle="tooltip" title="' + __('Click to search %s', value) + '" data-field="' + field + '" data-value="' + value + '">' + value + '</a>';
@@ -865,7 +865,7 @@ define(['jquery', 'bootstrap'], function ($, undefined) {
                         var customValue = this.customField.split('.').reduce(function (obj, key) {
                             return obj === null || obj === undefined ? '' : obj[key];
                         }, row);
-                        value = customValue;
+                        value = Fast.api.escape(customValue);
                         field = this.customField;
                     }
                     if (typeof that.searchList === 'object' && typeof that.custom === 'undefined') {
@@ -1020,6 +1020,7 @@ define(['jquery', 'bootstrap'], function ($, undefined) {
                     var temp = matched.split('.').reduce(function (obj, key) {
                         return obj === null || obj === undefined ? '' : obj[key];
                     }, row);
+                    temp = Fast.api.escape(temp);
                     return temp;
                 });
                 return url;
