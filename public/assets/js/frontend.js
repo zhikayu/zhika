@@ -2,7 +2,7 @@ define(['fast', 'template', 'moment'], function (Fast, Template, Moment) {
     var Frontend = {
         api: {
             //发送验证码
-            sendcaptcha: function (btn, type, data, callback) {
+            sendcaptcha: function (btn, type, data, success, error) {
                 $(btn).addClass("disabled", true).text("发送中...");
                 var si = {};
                 Frontend.api.ajax({url: $(btn).data("url"), data: data}, function (data, ret) {
@@ -17,11 +17,15 @@ define(['fast', 'template', 'moment'], function (Fast, Template, Moment) {
                             $(btn).addClass("disabled").text(seconds + "秒后可再次发送");
                         }
                     }, 1000);
-                    if (typeof callback == 'function') {
-                        callback.call(this, data, ret);
+                    if (typeof success == 'function') {
+                        success.call(this, data, ret);
                     }
-                }, function () {
+                }, function (data, ret) {
                     $(btn).removeClass("disabled").text('发送验证码');
+
+                    if (typeof error == 'function') {
+                        error.call(this, data, ret);
+                    }
                 });
             },
             //准备验证码
@@ -39,6 +43,8 @@ define(['fast', 'template', 'moment'], function (Fast, Template, Moment) {
                                     data.captcha = $("input[name=captcha]", form).val();
                                     Frontend.api.sendcaptcha(btn, type, data, function (data, ret) {
                                         Layer.close(index);
+                                    }, function (data, ret) {
+                                        $("img.captcha-img", form).trigger("click");
                                     });
                                     return true;
                                 }

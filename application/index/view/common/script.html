@@ -8,7 +8,7 @@
                     <div class="input-group">
                         <input type="text" name="captcha" class="form-control" data-rule="required;length({$Think.config.captcha.length})" />
                         <span class="input-group-btn" style="padding:0;border:none;">
-                            <img src="{:captcha_src()}" width="107" height="32" onclick="this.src = '{:captcha_src()}?r=' + Math.random();"/>
+                            <img src="{:captcha_src()}" width="107" height="32" class="captcha-img" onclick="this.src = '{:captcha_src()}?r=' + Math.random();"/>
                         </span>
                     </div>
                     <span class="msg-box n-right" style="left:0;top:33px;text-align: left;" for="captcha"></span>
