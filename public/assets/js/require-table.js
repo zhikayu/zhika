@@ -833,8 +833,11 @@ define(['jquery', 'bootstrap'], function ($, undefined) {
                 },
                 search: function (value, row, index) {
                     var field = this.field;
-                    if (typeof this.customField !== 'undefined' && typeof row[this.customField] !== 'undefined') {
-                        value = row[this.customField];
+                    if (typeof this.customField !== 'undefined') {
+                        var customValue = this.customField.split('.').reduce(function (obj, key) {
+                            return obj === null || obj === undefined ? '' : obj[key];
+                        }, row);
+                        value = customValue;
                         field = this.customField;
                     }
                     return '<a href="javascript:;" class="searchit" data-toggle="tooltip" title="' + __('Click to search %s', value) + '" data-field="' + field + '" data-value="' + value + '">' + value + '</a>';
@@ -858,8 +861,11 @@ define(['jquery', 'bootstrap'], function ($, undefined) {
                         colorArr = $.extend(colorArr, this.custom);
                     }
                     var field = this.field;
-                    if (typeof this.customField !== 'undefined' && typeof row[this.customField] !== 'undefined') {
-                        value = row[this.customField];
+                    if (typeof this.customField !== 'undefined') {
+                        var customValue = this.customField.split('.').reduce(function (obj, key) {
+                            return obj === null || obj === undefined ? '' : obj[key];
+                        }, row);
+                        value = customValue;
                         field = this.customField;
                     }
                     if (typeof that.searchList === 'object' && typeof that.custom === 'undefined') {
@@ -1011,17 +1017,10 @@ define(['jquery', 'bootstrap'], function ($, undefined) {
                     url + (url.match(/(\?|&)+/) ? "&ids=" : "/ids/") + '{ids}' : url;
                 url = url.replace(/\{(.*?)\}/gi, function (matched) {
                     matched = matched.substring(1, matched.length - 1);
-                    if (matched.indexOf(".") !== -1) {
-                        var temp = row;
-                        var arr = matched.split(/\./);
-                        for (var i = 0; i < arr.length; i++) {
-                            if (typeof temp[arr[i]] !== 'undefined') {
-                                temp = temp[arr[i]];
-                            }
-                        }
-                        return typeof temp === 'object' ? '' : temp;
-                    }
-                    return row[matched];
+                    var temp = matched.split('.').reduce(function (obj, key) {
+                        return obj === null || obj === undefined ? '' : obj[key];
+                    }, row);
+                    return temp;
                 });
                 return url;
             },
