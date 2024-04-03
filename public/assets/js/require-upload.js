@@ -228,7 +228,6 @@ define(['jquery', 'bootstrap', 'dropzone', 'template'], function ($, undefined, 
                             },
                             addedfile: function (file) {
                                 var params = $(this.element).data("params") || {};
-                                params = typeof params === 'function' ? params.call(this, file) : params;
                                 var category = typeof params.category !== 'undefined' ? params.category : ($(this.element).data("category") || '');
                                 file.category = typeof category === 'function' ? category.call(this, file) : category;
                             },
