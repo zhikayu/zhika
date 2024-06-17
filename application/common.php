@@ -2,7 +2,6 @@
 
 // 公共助手函数
 
-use Symfony\Component\VarExporter\VarExporter;
 use think\exception\HttpResponseException;
 use think\Response;
 
@@ -89,7 +88,9 @@ if (!function_exists('cdnurl')) {
     {
         $regex = "/^((?:[a-z]+:)?\/\/|data:image\/)(.*)/i";
         $cdnurl = \think\Config::get('upload.cdnurl');
-        $url = preg_match($regex, $url) || ($cdnurl && stripos($url, $cdnurl) === 0) ? $url : $cdnurl . $url;
+        if (is_bool($domain) || stripos($cdnurl, '/') === 0) {
+            $url = preg_match($regex, $url) || ($cdnurl && stripos($url, $cdnurl) === 0) ? $url : $cdnurl . $url;
+        }
         if ($domain && !preg_match($regex, $url)) {
             $domain = is_bool($domain) ? request()->domain() : $domain;
             $url = $domain . $url;
@@ -216,7 +217,7 @@ if (!function_exists('addtion')) {
         } else {
             foreach ($fields as $k => $v) {
                 if (is_array($v)) {
-                    $v['field'] = isset($v['field']) ? $v['field'] : $k;
+                    $v['field'] = $v['field'] ?? $k;
                 } else {
                     $v = ['field' => $v];
                 }
@@ -225,12 +226,12 @@ if (!function_exists('addtion')) {
         }
         foreach ($fieldsArr as $k => &$v) {
             $v = is_array($v) ? $v : ['field' => $v];
-            $v['display'] = isset($v['display']) ? $v['display'] : str_replace(['_ids', '_id'], ['_names', '_name'], $v['field']);
-            $v['primary'] = isset($v['primary']) ? $v['primary'] : '';
-            $v['column'] = isset($v['column']) ? $v['column'] : 'name';
-            $v['model'] = isset($v['model']) ? $v['model'] : '';
-            $v['table'] = isset($v['table']) ? $v['table'] : '';
-            $v['name'] = isset($v['name']) ? $v['name'] : str_replace(['_ids', '_id'], '', $v['field']);
+            $v['display'] = $v['display'] ?? str_replace(['_ids', '_id'], ['_names', '_name'], $v['field']);
+            $v['primary'] = $v['primary'] ?? '';
+            $v['column'] = $v['column'] ?? 'name';
+            $v['model'] = $v['model'] ?? '';
+            $v['table'] = $v['table'] ?? '';
+            $v['name'] = $v['name'] ?? str_replace(['_ids', '_id'], '', $v['field']);
         }
         unset($v);
         $ids = [];
@@ -323,7 +324,7 @@ if (!function_exists('var_export_short')) {
 
         if ($replaced) {
             $dump = preg_replace_callback("/'##<(\d+)>##'/", function ($matches) use ($replaced) {
-                return isset($replaced[$matches[1]]) ? $replaced[$matches[1]] : "''";
+                return $replaced[$matches[1]] ?? "''";
             }, $dump);
         }
 
@@ -427,7 +428,7 @@ if (!function_exists('check_cors_request')) {
      */
     function check_cors_request()
     {
-        if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN']) {
+        if (isset($_SERVER['HTTP_ORIGIN']) && $_SERVER['HTTP_ORIGIN'] && config('fastadmin.cors_request_domain')) {
             $info = parse_url($_SERVER['HTTP_ORIGIN']);
             $domainArr = explode(',', config('fastadmin.cors_request_domain'));
             $domainArr[] = request()->host(true);
@@ -465,6 +466,19 @@ if (!function_exists('xss_clean')) {
     }
 }
 
+if (!function_exists('url_clean')) {
+    /**
+     * 清理URL
+     */
+    function url_clean($url)
+    {
+        if (!check_url_allowed($url)) {
+            return '';
+        }
+        return xss_clean($url);
+    }
+}
+
 if (!function_exists('check_ip_allowed')) {
     /**
      * 检测IP是否允许
@@ -480,6 +494,40 @@ if (!function_exists('check_ip_allowed')) {
             $response = Response::create('请求无权访问', 'html', 403);
             throw new HttpResponseException($response);
         }
+    }
+}
+
+if (!function_exists('check_url_allowed')) {
+    /**
+     * 检测URL是否允许
+     * @param string $url URL
+     * @return bool
+     */
+    function check_url_allowed($url = '')
+    {
+        //允许的主机列表
+        $allowedHostArr = [
+            strtolower(request()->host())
+        ];
+
+        if (empty($url)) {
+            return true;
+        }
+
+        //如果是站内相对链接则允许
+        if (preg_match("/^[\/a-z][a-z0-9][a-z0-9\.\/]+((\?|#).*)?\$/i", $url) && substr($url, 0, 2) !== '//') {
+            return true;
+        }
+
+        //如果是站外链接则需要判断HOST是否允许
+        if (preg_match("/((http[s]?:\/\/)+(?>[a-z\-0-9]{2,}\.){1,}[a-z]{2,8})(?:\s|\/)/i", $url)) {
+            $chkHost = parse_url(strtolower($url), PHP_URL_HOST);
+            if ($chkHost && in_array($chkHost, $allowedHostArr)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
 

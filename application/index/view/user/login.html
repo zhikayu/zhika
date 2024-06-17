@@ -31,7 +31,7 @@
                 </div>
                 <div class="form-group">
                     <button type="submit" class="btn btn-primary btn-lg btn-block">{:__('Sign in')}</button>
-                    <a href="{:url('user/register')}?url={$url|urlencode|htmlentities}" class="btn btn-default btn-lg btn-block mt-3 no-border">还没有账号？点击注册</a>
+                    <a href="{:url('user/register')}?url={$url|urlencode|htmlentities}" class="btn btn-default btn-lg btn-block mt-3 no-border">{:__("Don't have an account? Sign up")}</a>
                 </div>
                 <!--@IndexLoginFormEnd-->
             </form>
@@ -86,8 +86,7 @@
             </div>
         </div>
         <div class="form-group form-footer">
-            <label class="control-label col-xs-12 col-sm-3"></label>
-            <div class="col-xs-12 col-sm-8">
+            <div class="col-xs-12 col-sm-8 col-sm-offset-3">
                 <button type="submit" class="btn btn-md btn-primary">{:__('Ok')}</button>
             </div>
         </div>

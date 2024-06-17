@@ -18,6 +18,7 @@
 
 @primary-color: #007bff;
 //@primary-color: #2d76d9;
+@input-min-height: 33px;
 
 .clearfix() {
     &:before,
@@ -130,9 +131,14 @@ a {
     }
 }
 
-.dropdown:hover .dropdown-menu {
-    display: block;
-    margin-top: 0;
+#header-navbar {
+    .dropdown:hover .dropdown-menu {
+        display: block;
+        margin-top: 0;
+    }
+    li.dropdown ul.dropdown-menu {
+        min-width: 100px;
+    }
 }
 
 .navbar {
@@ -143,10 +149,6 @@ a {
     > li > a {
         font-size: 14px;
     }
-}
-
-#header-navbar li.dropdown ul.dropdown-menu {
-    min-width: 100px;
 }
 
 .dropdown-menu {
@@ -263,20 +265,34 @@ a {
     position: absolute;
 }
 
-.bootstrap-select .status {
-    background: #f0f0f0;
-    clear: both;
-    color: #999;
-    font-size: 12px;
-    font-weight: 500;
-    line-height: 1;
-    margin-bottom: -5px;
-    padding: 10px 20px;
+.bootstrap-select {
+    .status {
+        background: #f0f0f0;
+        clear: both;
+        color: #999;
+        font-size: 12px;
+        font-weight: 500;
+        line-height: 1;
+        margin-bottom: -5px;
+        padding: 10px 20px;
+    }
+
+    .msg-box {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .bs-placeholder {
+        min-height: @input-min-height;
+    }
+
+    min-height: @input-min-height;
 }
 
 select.bs-select-hidden, select.selectpicker {
     display: inherit !important;
-    max-height: 31px;
+    max-height: @input-min-height;
     overflow: hidden;
 
     &[multiple] {
@@ -324,6 +340,7 @@ input.selectpage {
             }
         }
     }
+    min-height: @input-min-height;
 }
 
 /*修复radio和checkbox样式对齐*/
@@ -457,6 +474,27 @@ form.form-horizontal .control-label {
     .panel-page {
         padding: 15px;
         min-height: 300px;
+    }
+
+    .n-bootstrap {
+        .n-right {
+            margin-top: 0;
+            top: -20px;
+            position: absolute;
+            left: 0;
+            text-align: right;
+            width: 100%;
+
+            .msg-wrap {
+                position: relative;
+            }
+        }
+
+        .col-xs-12 > .n-right {
+            .msg-wrap {
+                margin-right: 15px;
+            }
+        }
     }
 }
 
@@ -619,9 +657,11 @@ footer.footer {
     .login-main {
         padding: 40px 45px 20px 45px;
     }
+}
 
+.login-section, .form-section {
     .n-bootstrap {
-        .form-group {
+        .controls {
             position: relative;
         }
 
@@ -631,7 +671,7 @@ footer.footer {
 
         .n-right {
             margin-top: 0;
-            top: 0;
+            top: -20px;
             position: absolute;
             left: 0;
             text-align: right;
@@ -838,7 +878,7 @@ main.content {
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
     display: inline-block;
     padding: 4px 6px;
-    margin-bottom: 10px;
+    //margin-bottom: 10px;
     color: #555;
     vertical-align: middle;
     //border-radius: 4px;
@@ -927,5 +967,29 @@ main.content {
             border-bottom: 1px solid #ddd;
         }
 
+    }
+}
+
+.autocontent {
+    position: relative;
+
+    .autocontent-caret {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        line-height: 1;
+        background: #eee;
+        color: #ddd;
+        vertical-align: middle;
+        padding: 0 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+
+        &:hover {
+            color: #ccc;
+        }
     }
 }

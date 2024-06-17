@@ -1,4 +1,6 @@
-define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function ($, undefined, Backend, Table, Form, Template) {
+define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template', 'cookie'], function ($, undefined, Backend, Table, Form, Template, undefined) {
+    $.cookie.prototype.defaults = {path: Config.moduleurl};
+
     var Controller = {
         index: function () {
             // 初始化表格参数配置
@@ -90,7 +92,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function
                         uid: userinfo ? userinfo.id : '',
                         token: userinfo ? userinfo.token : '',
                         domain: Config.domain,
-                        version: Config.faversion
+                        version: Config.faversion,
+                        sid: Controller.api.sid()
                     });
                     return params;
                 },
@@ -291,58 +294,66 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function
                 var area = [$(window).width() > 800 ? '500px' : '95%', $(window).height() > 600 ? '400px' : '95%'];
                 var userinfo = Controller.api.userinfo.get();
                 if (!userinfo) {
-                    Layer.open({
-                        content: Template("logintpl", {}),
-                        zIndex: 99,
-                        area: area,
-                        title: __('Login FastAdmin'),
-                        resize: false,
-                        btn: [__('Login'), __('Register')],
-                        yes: function (index, layero) {
-                            Fast.api.ajax({
-                                url: Config.api_url + '/user/login',
-                                type: 'post',
-                                data: {
-                                    account: $("#inputAccount", layero).val(),
-                                    password: $("#inputPassword", layero).val(),
-                                    version: Config.faversion,
-                                }
-                            }, function (data, ret) {
-                                Controller.api.userinfo.set(data);
-                                Layer.closeAll();
-                                Layer.alert(ret.msg, {title: __('Warning'), icon: 1});
-                                return false;
-                            }, function (data, ret) {
-                            });
-                        },
-                        btn2: function () {
-                            return false;
-                        },
-                        success: function (layero, index) {
-                            this.checkEnterKey = function (event) {
-                                if (event.keyCode === 13) {
-                                    $(".layui-layer-btn0").trigger("click");
-                                    return false;
-                                }
-                            };
-                            $(document).on('keydown', this.checkEnterKey);
-                            $(".layui-layer-btn1", layero).prop("href", "https://www.fastadmin.net/user/register.html").prop("target", "_blank");
-                        },
-                        end: function () {
-                            $(document).off('keydown', this.checkEnterKey);
+                    Fast.api.ajax({
+                        url: Config.api_url + '/user/logintpl',
+                        type: 'post',
+                        loading: false,
+                        data: {
+                            version: Config.faversion,
+                            sid: Controller.api.sid()
                         }
+                    }, function (tpldata, ret) {
+                        Layer.open({
+                            content: Template.render(tpldata, {}),
+                            zIndex: 99,
+                            area: area,
+                            title: __('Login'),
+                            resize: false,
+                            btn: [__('Login')],
+                            yes: function (index, layero) {
+                                var data = $("form", layero).serializeArray();
+                                data.push({name: "faversion", value: Config.faversion});
+                                data.push({name: "sid", value: Controller.api.sid()});
+                                Fast.api.ajax({
+                                    url: Config.api_url + '/user/login',
+                                    type: 'post',
+                                    data: data
+                                }, function (data, ret) {
+                                    Controller.api.userinfo.set(data);
+                                    Layer.closeAll();
+                                    Layer.alert(ret.msg, {title: __('Warning'), icon: 1});
+                                    return false;
+                                }, function (data, ret) {
+                                });
+                            },
+                            success: function (layero, index) {
+                                this.checkEnterKey = function (event) {
+                                    if (event.keyCode === 13) {
+                                        $(".layui-layer-btn0").trigger("click");
+                                        return false;
+                                    }
+                                };
+                                $(document).on('keydown', this.checkEnterKey);
+                            },
+                            end: function () {
+                                $(document).off('keydown', this.checkEnterKey);
+                            }
+                        });
+                        return false;
                     });
                 } else {
                     Fast.api.ajax({
-                        url: Config.api_url + '/user/index',
+                        url: Config.api_url + '/user/userinfotpl',
+                        type: 'post',
                         data: {
                             uid: userinfo.id,
                             token: userinfo.token,
                             version: Config.faversion,
+                            sid: Controller.api.sid()
                         }
-                    }, function (data) {
+                    }, function (tpldata, ret) {
                         Layer.open({
-                            content: Template("userinfotpl", userinfo),
+                            content: Template.render(tpldata, userinfo),
                             area: area,
                             title: __('Userinfo'),
                             resize: false,
@@ -350,7 +361,12 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function
                             yes: function () {
                                 Fast.api.ajax({
                                     url: Config.api_url + '/user/logout',
-                                    data: {uid: userinfo.id, token: userinfo.token, version: Config.faversion}
+                                    data: {
+                                        uid: userinfo.id,
+                                        token: userinfo.token,
+                                        version: Config.faversion,
+                                        sid: Controller.api.sid()
+                                    }
                                 }, function (data, ret) {
                                     Controller.api.userinfo.set(null);
                                     Layer.closeAll();
@@ -368,7 +384,6 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function
                         $(that).trigger('click');
                         return false;
                     });
-
                 }
             });
 
@@ -594,16 +609,8 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function
                 var uid = userinfo ? userinfo.id : 0;
 
                 if (parseInt(uid) === 0) {
-                    return Layer.alert(__('Not login tips'), {
-                        title: __('Warning'),
-                        btn: [__('Login now')],
-                        yes: function (index, layero) {
-                            $(".btn-userinfo").trigger("click", name, version);
-                        },
-                        btn2: function () {
-                            install(name, version, false);
-                        }
-                    });
+                    $(".btn-userinfo").trigger("click", name, version);
+                    return false;
                 }
                 install(name, version, false);
             });
@@ -616,7 +623,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function
                     return false;
                 }
                 Template.helper("__", __);
-                Layer.confirm(Template("uninstalltpl", {addon: Config['addons'][name]}), {focusBtn: false}, function (index, layero) {
+                Layer.confirm(Template("uninstalltpl", {addon: Config['addons'][name]}), {focusBtn: false, title: __("Warning")}, function (index, layero) {
                     uninstall(name, false, $("input[name='droptables']", layero).prop("checked"));
                 });
             });
@@ -713,7 +720,7 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function
                     if (typeof row.homepage !== 'undefined') {
                         url = row.homepage;
                     } else if (typeof row.qq !== 'undefined' && row.qq) {
-                        url = 'https://wpa.qq.com/msgrd?v=3&uin=' + row.qq + '&site=fastadmin.net&menu=yes';
+                        url = 'https://wpa.qq.com/msgrd?v=3&uin=' + row.qq + '&site=&menu=yes';
                     }
                     return '<a href="' + url + '" target="_blank" data-toggle="tooltip" class="text-primary">' + value + '</a>';
                 },
@@ -738,26 +745,40 @@ define(['jquery', 'bootstrap', 'backend', 'table', 'form', 'template'], function
             },
             userinfo: {
                 get: function () {
-                    var userinfo = localStorage.getItem("fastadmin_userinfo");
+                    if (typeof $.cookie !== 'undefined') {
+                        var userinfo = $.cookie('fastadmin_userinfo');
+                    } else {
+                        var userinfo = sessionStorage.getItem("fastadmin_userinfo");
+                    }
                     return userinfo ? JSON.parse(userinfo) : null;
                 },
                 set: function (data) {
-                    if (data) {
-                        localStorage.setItem("fastadmin_userinfo", JSON.stringify(data));
+                    if (typeof $.cookie !== 'undefined') {
+                        if (data) {
+                            $.cookie("fastadmin_userinfo", JSON.stringify(data));
+                        } else {
+                            $.removeCookie("fastadmin_userinfo");
+                        }
                     } else {
-                        localStorage.removeItem("fastadmin_userinfo");
+                        if (data) {
+                            sessionStorage.setItem("fastadmin_userinfo", JSON.stringify(data));
+                        } else {
+                            sessionStorage.removeItem("fastadmin_userinfo");
+                        }
                     }
                 }
+            },
+            sid: function () {
+                var sid = $.cookie('fastadmin_sid');
+                if (!sid) {
+                    sid = Math.random().toString(20).substr(2, 12);
+                    $.cookie('fastadmin_sid', sid);
+                }
+                return sid;
             },
             refresh: function (table, name) {
                 //刷新左侧边栏
                 Fast.api.refreshmenu();
-                //刷新插件JS缓存
-                Fast.api.ajax({url: require.toUrl('addons.js'), loading: false}, function () {
-                    return false;
-                }, function () {
-                    return false;
-                });
 
                 //刷新行数据
                 if ($(".operate[data-name='" + name + "']").length > 0) {

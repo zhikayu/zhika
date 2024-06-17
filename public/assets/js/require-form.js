@@ -61,8 +61,10 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                             var msg = ret.hasOwnProperty("msg") && ret.msg !== "" ? ret.msg : __('Operation completed');
                             parent.Toastr.success(msg);
                             parent.$(".btn-refresh").trigger("click");
-                            var index = parent.Layer.getFrameIndex(window.name);
-                            parent.Layer.close(index);
+                            if (window.name) {
+                                var index = parent.Layer.getFrameIndex(window.name);
+                                parent.Layer.close(index);
+                            }
                             return false;
                         }, function (data, ret) {
                             that.holdSubmit(false);
@@ -128,7 +130,11 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                     });
                     $(form).on("reset", function () {
                         setTimeout(function () {
-                            $('.selectpage', form).selectPageClear();
+                            $(".selectpage", form).each(function () {
+                                var selectpage = $(this).data("selectPageObject");
+                                selectpage.elem.hidden.val($(this).val());
+                                $(this).selectPageRefresh();
+                            });
                         }, 1);
                     });
                 }
@@ -361,6 +367,12 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                             return obj;
                         };
                         var fieldlist = $(".fieldlist", form);
+                        //表单重置
+                        form.on("reset", function () {
+                            setTimeout(function () {
+                                fieldlist.trigger("fa.event.refreshfieldlist");
+                            });
+                        });
                         //监听文本框改变事件
                         $(document).on('change keyup changed', ".fieldlist input,.fieldlist textarea,.fieldlist select", function () {
                             var container = $(this).closest(".fieldlist");
@@ -478,6 +490,11 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                 if ($("[data-role='tagsinput']", form).length > 0) {
                     require(['tagsinput', 'autocomplete'], function () {
                         $("[data-role='tagsinput']").tagsinput();
+                        form.on("reset", function () {
+                            setTimeout(function () {
+                                $("[data-role='tagsinput']").tagsinput('reset');
+                            }, 0);
+                        });
                     });
                 }
             },
@@ -498,14 +515,28 @@ define(['jquery', 'bootstrap', 'upload', 'validator', 'validator-lang'], functio
                     var baseregex = /^([a-z0-9\_]+)([>|<|=|\!]=?)(.*)$/i, strregex = /^('|")(.*)('|")$/, regregex = /^regex:(.*)$/;
                     // @formatter:off
                     var operator_result = {
-                        '>': function(a, b) { return a > b; },
-                        '>=': function(a, b) { return a >= b; },
-                        '<': function(a, b) { return a < b; },
-                        '<=': function(a, b) { return a <= b; },
-                        '==': function(a, b) { return a == b; },
-                        '!=': function(a, b) { return a != b; },
-                        'in': function(a, b) { return b.split(/\,/).indexOf(a) > -1; },
-                        'regex': function(a, b) {
+                        '>': function (a, b) {
+                            return a > b;
+                        },
+                        '>=': function (a, b) {
+                            return a >= b;
+                        },
+                        '<': function (a, b) {
+                            return a < b;
+                        },
+                        '<=': function (a, b) {
+                            return a <= b;
+                        },
+                        '==': function (a, b) {
+                            return a == b;
+                        },
+                        '!=': function (a, b) {
+                            return a != b;
+                        },
+                        'in': function (a, b) {
+                            return b.split(/\,/).indexOf(a) > -1;
+                        },
+                        'regex': function (a, b) {
                             var regParts = b.match(/^\/(.*?)\/([gim]*)$/);
                             var regexp = regParts ? new RegExp(regParts[1], regParts[2]) : new RegExp(b);
                             return regexp.test(a);

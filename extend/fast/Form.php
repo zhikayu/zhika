@@ -42,10 +42,10 @@ use ArrayAccess;
  * @method static string checkboxs(string $name, array $list = [], string $checked = null, array $options = []) 一组复选框
  * @method static string radio(string $name, string $value = null, string $checked = null, array $options = [])) 单个单选框
  * @method static string radios(string $name, array $list = [], string $checked = null, array $options = [])) 一组单选框
- * @method static string image(string $name = null, string $value, array $inputAttr = [], array $uploadAttr = [], array $chooseAttr = [], array $previewAttr = []) 上传图片组件
- * @method static string images(string $name = null, string $value, array $inputAttr = [], array $uploadAttr = [], array $chooseAttr = [], array $previewAttr = []) 上传图片组件(多图)）
- * @method static string upload(string $name = null, string $value, array $inputAttr = [], array $uploadAttr = [], array $chooseAttr = [], array $previewAttr = []) 上传文件组件
- * @method static string uploads(string $name = null, string $value, array $inputAttr = [], array $uploadAttr = [], array $chooseAttr = [], array $previewAttr = []) 上传文件组件(多文件)）
+ * @method static string image(string $name = null, string $value = null, array $inputAttr = [], array $uploadAttr = [], array $chooseAttr = [], array $previewAttr = []) 上传图片组件
+ * @method static string images(string $name = null, string $value = null, array $inputAttr = [], array $uploadAttr = [], array $chooseAttr = [], array $previewAttr = []) 上传图片组件(多图)）
+ * @method static string upload(string $name = null, string $value = null, array $inputAttr = [], array $uploadAttr = [], array $chooseAttr = [], array $previewAttr = []) 上传文件组件
+ * @method static string uploads(string $name = null, string $value = null, array $inputAttr = [], array $uploadAttr = [], array $chooseAttr = [], array $previewAttr = []) 上传文件组件(多文件)）
  * @method static string button(string $value = null, array $options = []) 表单button
  */
 class Form
@@ -870,7 +870,7 @@ EOD;
         $checked = is_array($checked) ? $checked : explode(',', $checked);
         foreach ($list as $k => $v) {
             $options['id'] = "{$name}-{$k}";
-            $html[] = sprintf(Form::label("{$name}-{$k}", "%s {$v}"), Form::checkbox("{$name}[{$k}]", $k, in_array($k, $checked), $options));
+            $html[] = sprintf(Form::label("{$name}-{$k}", "%s " . str_replace('%', '%%', $v)), Form::checkbox("{$name}[{$k}]", $k, in_array($k, $checked), $options));
         }
         return '<div class="checkbox">' . implode(' ', $html) . '</div>';
     }
@@ -913,7 +913,7 @@ EOD;
         $checked = is_array($checked) ? $checked : explode(',', $checked);
         foreach ($list as $k => $v) {
             $options['id'] = "{$name}-{$k}";
-            $html[] = sprintf(Form::label("{$name}-{$k}", "%s {$v}"), Form::radio($name, $k, in_array($k, $checked), $options));
+            $html[] = sprintf(Form::label("{$name}-{$k}", "%s " . str_replace('%', '%%', $v)), Form::radio($name, $k, in_array($k, $checked), $options));
         }
         return '<div class="radio">' . implode(' ', $html) . '</div>';
     }
@@ -1002,8 +1002,8 @@ EOD;
     {
         $domname = str_replace(['[', ']', '.'], '', $name);
         $options = [
-            'id'            => "plupload-{$domname}",
-            'class'         => "btn btn-danger plupload",
+            'id'            => "faupload-{$domname}",
+            'class'         => "btn btn-danger faupload",
             'data-input-id' => "c-{$domname}",
         ];
         $upload = $uploadAttr === false ? false : true;
@@ -1023,7 +1023,7 @@ EOD;
         }
         $chooseBtn = $choose ? $this->button('<i class="fa fa-list"></i> ' . __('Choose'), array_merge($options, $chooseAttr)) : '';
         $previewAttrHtml = $this->attributes($previewAttr);
-        $previewArea = $preview ? '<ul class="row list-inline plupload-preview" id="p-' . $domname . '" ' . $previewAttrHtml . '></ul>' : '';
+        $previewArea = $preview ? '<ul class="row list-inline faupload-preview" id="p-' . $domname . '" ' . $previewAttrHtml . '></ul>' : '';
         $input = $this->text($name, $value, array_merge(['size' => 50, 'id' => "c-{$domname}"], $inputAttr));
         $html = <<<EOD
 <div class="input-group">

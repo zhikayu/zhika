@@ -231,15 +231,14 @@ trait Backend
             $this->error(__("Invalid parameters"));
         }
         $ids = $ids ?: $this->request->post('ids');
-        if (empty($ids)) {
-            $this->error(__('Parameter %s can not be empty', 'ids'));
-        }
         $pk = $this->model->getPk();
         $adminIds = $this->getDataLimitAdminIds();
         if (is_array($adminIds)) {
             $this->model->where($this->dataLimitField, 'in', $adminIds);
         }
-        $this->model->where($pk, 'in', $ids);
+        if ($ids) {
+            $this->model->where($pk, 'in', $ids);
+        }
         $count = 0;
         Db::startTrans();
         try {
@@ -400,6 +399,7 @@ trait Backend
         $list = db()->query("SELECT COLUMN_NAME,COLUMN_COMMENT FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = ? AND TABLE_SCHEMA = ?", [$table, $database]);
         foreach ($list as $k => $v) {
             if ($importHeadType == 'comment') {
+                $v['COLUMN_COMMENT'] = explode(':', $v['COLUMN_COMMENT'])[0]; //字段备注有:时截取
                 $fieldArr[$v['COLUMN_COMMENT']] = $v['COLUMN_NAME'];
             } else {
                 $fieldArr[$v['COLUMN_NAME']] = $v['COLUMN_NAME'];

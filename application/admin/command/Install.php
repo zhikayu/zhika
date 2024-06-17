@@ -182,7 +182,7 @@ class Install extends Command
         try {
             $pdo = new PDO("{$config['type']}:host={$mysqlHostname}" . ($mysqlHostport ? ";port={$mysqlHostport}" : ''), $mysqlUsername, $mysqlPassword);
             $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-            $pdo->query("CREATE DATABASE IF NOT EXISTS `{$mysqlDatabase}` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;");
+            $pdo->query("CREATE DATABASE IF NOT EXISTS `{$mysqlDatabase}` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;");
 
             // 连接install命令中指定的数据库
             $instance = Db::connect([
@@ -309,8 +309,8 @@ class Install extends Command
         //数据库配置文件
         $dbConfigFile = APP_PATH . 'database.php';
 
-        if (version_compare(PHP_VERSION, '7.1.0', '<')) {
-            throw new Exception(__("The current version %s is too low, please use PHP 7.1 or higher", PHP_VERSION));
+        if (version_compare(PHP_VERSION, '7.2.0', '<')) {
+            throw new Exception(__("The current version %s is too low, please use PHP 7.2 or higher", PHP_VERSION));
         }
         if (!extension_loaded("PDO")) {
             throw new Exception(__("PDO is not currently installed and cannot be installed"));

@@ -42,7 +42,7 @@ return [
     // 默认时区
     'default_timezone'       => 'PRC',
     // 是否开启多语言
-    'lang_switch_on'         => true,
+    'lang_switch_on'         => false,
     // 默认全局过滤方法 用逗号分隔多个
     'default_filter'         => '',
     // 默认语言
@@ -151,6 +151,11 @@ return [
     // +----------------------------------------------------------------------
     // 异常页面的模板文件
     'exception_tmpl'         => APP_PATH . 'common' . DS . 'view' . DS . 'tpl' . DS . 'think_exception.tpl',
+    // 自定义错误码模板
+    'http_exception_template'    =>  [
+        // 定义404错误的模板渲染
+        // 404 =>  APP_PATH . 'common/view/tpl/404.tpl',
+    ],
     // 错误显示信息,非调试模式有效
     'error_message'          => '你所浏览的页面暂时无法访问',
     // 显示错误信息
@@ -201,6 +206,7 @@ return [
         'type'           => '',
         // 是否自动开启 SESSION
         'auto_start'     => true,
+        //'cache_limiter'=>''
     ],
     // +----------------------------------------------------------------------
     // | Cookie设置
@@ -296,7 +302,7 @@ return [
         //允许跨域的域名,多个以,分隔
         'cors_request_domain'   => 'localhost,127.0.0.1',
         //版本号
-        'version'               => '1.3.4.20220530',
+        'version'               => '1.4.0.20230711',
         //API接口地址
         'api_url'               => 'https://api.fastadmin.net',
     ],

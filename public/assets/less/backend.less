@@ -22,6 +22,7 @@
 @main-bg: #f1f4f6;
 @panel-intro-bg: darken(@main-bg, 3%);
 @panel-nav-bg: #fff;
+@input-min-height: 33px;
 
 html,
 body {
@@ -73,11 +74,12 @@ body.is-dialog {
 /*iOS兼容*/
 html.ios-fix, html.ios-fix body {
     height: 100%;
-    overflow: auto;
+    //overflow: auto;
+    overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
 
     .wrapper, .tab-pane {
-        overflow: auto;
+        //overflow: auto;
         -webkit-overflow-scrolling: touch;
     }
 }
@@ -204,24 +206,38 @@ table.table-template {
     right: 12px;
 }
 
-.bootstrap-select .status {
-    background: #f0f0f0;
-    clear: both;
-    color: #999;
-    font-size: 13px;
-    font-weight: 500;
-    line-height: 1;
-    margin-bottom: -5px;
-    padding: 10px 20px;
+.bootstrap-select {
+    .msg-box {
+        position: absolute;
+        right: 0;
+        top: 0;
+    }
+
+    .status {
+        background: #f0f0f0;
+        clear: both;
+        color: #999;
+        font-size: 13px;
+        font-weight: 500;
+        line-height: 1;
+        margin-bottom: -5px;
+        padding: 10px 20px;
+    }
+
+    .bs-placeholder {
+        min-height: @input-min-height;
+    }
+
+    min-height: @input-min-height;
 }
 
 select.bs-select-hidden, select.selectpicker {
     display: inherit !important;
-    max-height: 31px;
+    max-height: @input-min-height;
     overflow: hidden;
 
     &[multiple] {
-        height: 31px;
+        height: @input-min-height;
         //visibility: hidden;
         padding: 0;
         background: #f4f4f4;
@@ -265,6 +281,8 @@ input.selectpage {
             }
         }
     }
+
+    min-height: @input-min-height;
 }
 
 .img-center {
@@ -870,6 +888,11 @@ form.form-horizontal .control-label {
     .bs-checkbox {
         min-width: 36px;
     }
+
+    //拖拽时隐藏tooltip，避免出现错位
+    tr[data-origpos] > td > .tooltip.in {
+        display: none !important;
+    }
 }
 
 /*修复nice-validator新版下的一处BUG*/
@@ -952,10 +975,25 @@ form.form-horizontal .control-label {
     font-size: 1.86em;
 }
 
-.bootstrap-table .form-commonsearch .form-group {
+.bootstrap-table .form-commonsearch .row > .form-group {
     margin-left: 0;
     margin-right: 0;
-    white-space: nowrap;
+
+    > .control-label {
+        white-space: nowrap;
+    }
+}
+
+.bootstrap-table {
+    .btn-commonsearch {
+        position: relative;
+
+        > span {
+            position: absolute;
+            top: -10px;
+            right: -10px;
+        }
+    }
 }
 
 .bootstrap-table .table:not(.table-condensed) > tbody > tr > th,
@@ -963,12 +1001,13 @@ form.form-horizontal .control-label {
 .bootstrap-table .table:not(.table-condensed) > thead > tr > td,
 .bootstrap-table .table:not(.table-condensed) > tbody > tr > td,
 .bootstrap-table .table:not(.table-condensed) > tfoot > tr > td {
-    padding: 8px 15px;
+    padding: 10px 15px;
+
     height: 47px;
 }
 
 .fixed-table-container tbody td .th-inner, .fixed-table-container thead th .th-inner {
-    padding: 8px 10px;
+    padding: 10px 10px;
 }
 
 .toolbar {
@@ -1313,7 +1352,7 @@ table.table-nowrap {
 
         .toolbar {
             .btn {
-                min-height: 33px;
+                min-height: @input-min-height;
             }
 
             a.btn-refresh, a.btn-del, a.btn-add, a.btn-edit, a.btn-import, a.btn-more, a.btn-recyclebin, .btn-mini-xs, .btn-multi {
@@ -1513,6 +1552,10 @@ table.table-nowrap {
     }
 }
 
+.sidebar-menu li.active > a > .fa-angle-left, .sidebar-menu li.active > a > .pull-right-container > .fa-angle-left {
+    .rotate(0deg);
+}
+
 .sidebar-menu li.treeview-open > a > .fa-angle-left, .sidebar-menu li.treeview-open > a > .pull-right-container > .fa-angle-left {
     .rotate(-90deg);
 }
@@ -1531,14 +1574,15 @@ table.table-nowrap {
     box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.075);
     display: inline-block;
     padding: 4px 6px;
-    margin-bottom: 10px;
+    //margin-bottom: 10px;
+
     color: #555;
     vertical-align: middle;
     //border-radius: 4px;
     //max-width: 100%;
 
     width: 100%;
-    line-height: 22px;
+    line-height: 23px;
     cursor: text;
 
 
@@ -1573,6 +1617,7 @@ table.table-nowrap {
     .tag {
         margin-right: 2px;
         color: white;
+        min-height: 23px;
 
         [data-role="remove"] {
             margin-left: 5px;
@@ -1620,5 +1665,29 @@ table.table-nowrap {
             border-bottom: 1px solid #ddd;
         }
 
+    }
+}
+
+.autocontent {
+    position: relative;
+
+    .autocontent-caret {
+        position: absolute;
+        right: 0;
+        top: 0;
+        height: 100%;
+        line-height: 1;
+        background: #eee;
+        color: #ddd;
+        vertical-align: middle;
+        padding: 0 5px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        cursor: pointer;
+
+        &:hover {
+            color: #ccc;
+        }
     }
 }

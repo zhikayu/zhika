@@ -65,13 +65,13 @@ class User extends Frontend
      */
     public function register()
     {
-        $url = $this->request->request('url', '', 'trim');
+        $url = $this->request->request('url', '', 'url_clean');
         if ($this->auth->id) {
             $this->success(__('You\'ve logged in, do not login again'), $url ? $url : url('user/index'));
         }
         if ($this->request->isPost()) {
             $username = $this->request->post('username');
-            $password = $this->request->post('password');
+            $password = $this->request->post('password', '', null);
             $email = $this->request->post('email');
             $mobile = $this->request->post('mobile', '');
             $captcha = $this->request->post('captcha');
@@ -128,9 +128,8 @@ class User extends Frontend
             }
         }
         //判断来源
-        $referer = $this->request->server('HTTP_REFERER');
-        if (!$url && (strtolower(parse_url($referer, PHP_URL_HOST)) == strtolower($this->request->host()))
-            && !preg_match("/(user\/login|user\/register|user\/logout)/i", $referer)) {
+        $referer = $this->request->server('HTTP_REFERER', '', 'url_clean');
+        if (!$url && $referer && !preg_match("/(user\/login|user\/register|user\/logout)/i", $referer)) {
             $url = $referer;
         }
         $this->view->assign('captchaType', config('fastadmin.user_register_captcha'));
@@ -144,13 +143,13 @@ class User extends Frontend
      */
     public function login()
     {
-        $url = $this->request->request('url', '', 'trim');
+        $url = $this->request->request('url', '', 'url_clean');
         if ($this->auth->id) {
-            $this->success(__('You\'ve logged in, do not login again'), $url ? $url : url('user/index'));
+            $this->success(__('You\'ve logged in, do not login again'), $url ?: url('user/index'));
         }
         if ($this->request->isPost()) {
             $account = $this->request->post('account');
-            $password = $this->request->post('password');
+            $password = $this->request->post('password', '', null);
             $keeplogin = (int)$this->request->post('keeplogin');
             $token = $this->request->post('__token__');
             $rule = [
@@ -174,7 +173,6 @@ class User extends Frontend
             $result = $validate->check($data);
             if (!$result) {
                 $this->error(__($validate->getError()), null, ['token' => $this->request->token()]);
-                return false;
             }
             if ($this->auth->login($account, $password)) {
                 $this->success(__('Logged in successful'), $url ? $url : url('user/index'));
@@ -183,9 +181,8 @@ class User extends Frontend
             }
         }
         //判断来源
-        $referer = $this->request->server('HTTP_REFERER');
-        if (!$url && (strtolower(parse_url($referer, PHP_URL_HOST)) == strtolower($this->request->host()))
-            && !preg_match("/(user\/login|user\/register|user\/logout)/i", $referer)) {
+        $referer = $this->request->server('HTTP_REFERER', '', 'url_clean');
+        if (!$url && $referer && !preg_match("/(user\/login|user\/register|user\/logout)/i", $referer)) {
             $url = $referer;
         }
         $this->view->assign('url', $url);
@@ -225,9 +222,9 @@ class User extends Frontend
     public function changepwd()
     {
         if ($this->request->isPost()) {
-            $oldpassword = $this->request->post("oldpassword");
-            $newpassword = $this->request->post("newpassword");
-            $renewpassword = $this->request->post("renewpassword");
+            $oldpassword = $this->request->post("oldpassword", '', null);
+            $newpassword = $this->request->post("newpassword", '', null);
+            $renewpassword = $this->request->post("renewpassword", '', null);
             $token = $this->request->post('__token__');
             $rule = [
                 'oldpassword'   => 'require|regex:\S{6,30}',
@@ -254,7 +251,6 @@ class User extends Frontend
             $result = $validate->check($data);
             if (!$result) {
                 $this->error(__($validate->getError()), null, ['token' => $this->request->token()]);
-                return false;
             }
 
             $ret = $this->auth->changepwd($newpassword, $oldpassword);

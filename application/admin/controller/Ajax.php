@@ -38,7 +38,7 @@ class Ajax extends Backend
      */
     public function lang()
     {
-
+        $this->request->get(['callback' => 'define']);
         $header = ['Content-Type' => 'application/javascript'];
         if (!config('app_debug')) {
             $offset = 30 * 60 * 60 * 24; // 缓存一个月
@@ -59,8 +59,10 @@ class Ajax extends Backend
     public function upload()
     {
         Config::set('default_return_type', 'json');
-        //必须设定cdnurl为空,否则cdnurl函数计算错误
-        Config::set('upload.cdnurl', '');
+
+        //必须还原upload配置,否则分片及cdnurl函数计算错误
+        Config::load(APP_PATH . 'extra/upload.php', 'upload');
+
         $chunkid = $this->request->post("chunkid");
         if ($chunkid) {
             if (!Config::get('upload.chunking')) {
@@ -273,18 +275,18 @@ class Ajax extends Backend
     {
         $params = $this->request->get("row/a");
         if (!empty($params)) {
-            $province = isset($params['province']) ? $params['province'] : '';
-            $city = isset($params['city']) ? $params['city'] : '';
+            $province = isset($params['province']) ? $params['province'] : null;
+            $city = isset($params['city']) ? $params['city'] : null;
         } else {
-            $province = $this->request->get('province', '');
-            $city = $this->request->get('city', '');
+            $province = $this->request->get('province');
+            $city = $this->request->get('city');
         }
         $where = ['pid' => 0, 'level' => 1];
         $provincelist = null;
-        if ($province !== '') {
+        if ($province !== null) {
             $where['pid'] = $province;
             $where['level'] = 2;
-            if ($city !== '') {
+            if ($city !== null) {
                 $where['pid'] = $city;
                 $where['level'] = 3;
             }

@@ -6,14 +6,12 @@ require.config({
         main: 'moment'
     }],
     //在打包压缩时将会把include中的模块合并到主文件中
-    include: ['css', 'layer', 'toastr', 'fast', 'frontend', 'frontend-init', 'table', 'form', 'dragsort', 'drag', 'drop', 'selectpage'],
+    include: ['css', 'layer', 'toastr', 'fast', 'frontend', 'frontend-init', 'table', 'form', 'dragsort', 'selectpage'],
     paths: {
         'lang': "empty:",
         'form': 'require-form',
         'table': 'require-table',
         'upload': 'require-upload',
-        'drag': 'jquery.drag.min',
-        'drop': 'jquery.drop.min',
         'dropzone': 'dropzone.min',
         'echarts': 'echarts.min',
         'echarts-theme': 'echarts-theme',
@@ -64,7 +62,7 @@ require.config({
             exports: '$.fn.bootstrapTable.defaults'
         },
         'bootstrap-table-export': {
-            deps: ['bootstrap-table', 'tableexport'],
+            deps: ['bootstrap-table'],
             exports: '$.fn.bootstrapTable.defaults'
         },
         'bootstrap-table-fixed-columns': {

@@ -44,7 +44,6 @@ class Index extends Backend
             'dashboard' => 'hot',
             'addon'     => ['new', 'red', 'badge'],
             'auth/rule' => __('Menu'),
-            'general'   => ['new', 'purple'],
         ], $this->view->site['fixedpage']);
         $action = $this->request->request('action');
         if ($this->request->isPost()) {
@@ -66,13 +65,16 @@ class Index extends Backend
      */
     public function login()
     {
-        $url = $this->request->get('url', 'index/index');
+        $url = $this->request->get('url', '', 'url_clean');
+        $url = $url ?: 'index/index';
         if ($this->auth->isLogin()) {
             $this->success(__("You've logged in, do not login again"), $url);
         }
+        //保持会话有效时长，单位:小时
+        $keeyloginhours = 24;
         if ($this->request->isPost()) {
             $username = $this->request->post('username');
-            $password = $this->request->post('password');
+            $password = $this->request->post('password', '', null);
             $keeplogin = $this->request->post('keeplogin');
             $token = $this->request->post('__token__');
             $rule = [
@@ -95,7 +97,7 @@ class Index extends Backend
                 $this->error($validate->getError(), $url, ['token' => $this->request->token()]);
             }
             AdminLog::setTitle(__('Login'));
-            $result = $this->auth->login($username, $password, $keeplogin ? 86400 : 0);
+            $result = $this->auth->login($username, $password, $keeplogin ? $keeyloginhours * 3600 : 0);
             if ($result === true) {
                 Hook::listen("admin_login_after", $this->request);
                 $this->success(__('Login successful'), $url, ['url' => $url, 'id' => $this->auth->id, 'username' => $username, 'avatar' => $this->auth->avatar]);
@@ -113,6 +115,7 @@ class Index extends Backend
         }
         $background = Config::get('fastadmin.login_background');
         $background = $background ? (stripos($background, 'http') === 0 ? $background : config('site.cdnurl') . $background) : '';
+        $this->view->assign('keeyloginhours', $keeyloginhours);
         $this->view->assign('background', $background);
         $this->view->assign('title', __('Login'));
         Hook::listen("admin_login_init", $this->request);
